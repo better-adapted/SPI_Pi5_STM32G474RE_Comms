@@ -133,6 +133,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
 	  HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
 
 	  if(Transfer_Init)
@@ -146,13 +147,6 @@ int main(void)
 		  Transfer_Init=0;
 	  }
 
-	  /*##-2- Wait for the end of the transfer ###################################*/
-	  /*  Before starting a new communication transfer, you must wait the callback call
-	      to get the transfer complete confirmation or an error detection.
-	      For simplicity reasons, this example is just waiting till the end of the
-	      transfer, but application may perform other tasks while transfer operation
-	      is ongoing. */
-
 	  while (wTransferState == TRANSFER_WAIT)
 	  {
 	  }
@@ -161,26 +155,20 @@ int main(void)
 	  {
 	    case TRANSFER_COMPLETE :
 	      /*##-3- Compare the sent and received buffers ##############################*/
-	      if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE)==0)
+	      if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128)==0)
 	      {
 	        // all good!
 	    	BSP_LED_Toggle(LED2);
 	    	wTransferState = TRANSFER_PROCESSED;
 	    	Transfer_Process_Counter++;
-//	    	HAL_SPI_DMAStop(&hspi1);
-//	    	HAL_SPI_DMAResume(&hspi1);
-//	    	HAL_DMA_STATE_READY()
 	      }
 	      break;
 
 	    case TRANSFER_ERROR:
 			Transfer_Error_Counter++;
+			  //Transfer_Init=1;
 	      break;
 	  }
-
-	  // gets here - good or error - does need to re-init!
-	  //Transfer_Init=1;
-
   }
   /* USER CODE END 3 */
 }

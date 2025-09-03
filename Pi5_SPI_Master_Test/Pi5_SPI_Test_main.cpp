@@ -198,6 +198,8 @@ int main(int argc, char *argv[])
 
 			char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
 			spiXfer(fd, speed, aTxBuffer, RXBuf, bytes);
+
+			usleep(1000);
 		}
 
 	diff = time_time() - start;
