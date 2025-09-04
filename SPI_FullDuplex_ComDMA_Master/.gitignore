@@ -1,0 +1,8 @@
+.visualgdb
+.vs
+*.o
+*.d
+*.su
+*.cyclo
+*.map
+*.mk
