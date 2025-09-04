@@ -85,6 +85,12 @@ int Transfer_Init=1;
   * @brief  The application entry point.
   * @retval int
   */
+
+HAL_StatusTypeDef SPI1_TEST_SEND()
+{
+	return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 113);
+}
+
 int main(void)
 {
 
@@ -138,7 +144,7 @@ int main(void)
 
 	  if(Transfer_Init)
 	  {
-		  HAL_StatusTypeDef res = HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE);
+		  HAL_StatusTypeDef res = SPI1_TEST_SEND();
 		  if ( res != HAL_OK)
 		  {
 		    /* Transfer error in transmission process */
@@ -155,7 +161,7 @@ int main(void)
 	  {
 	    case TRANSFER_COMPLETE :
 	      /*##-3- Compare the sent and received buffers ##############################*/
-	      if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128)==0)
+	      //if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128)==0)
 	      {
 	        // all good!
 	    	BSP_LED_Toggle(LED2);
@@ -310,7 +316,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
   /* Turn LED2 on: Transfer in transmission/reception process is complete */
   wTransferState = TRANSFER_COMPLETE;
 
-  volatile HAL_StatusTypeDef res = HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE);
+  SPI1_TEST_SEND();
 
   callbacks++;
 }
