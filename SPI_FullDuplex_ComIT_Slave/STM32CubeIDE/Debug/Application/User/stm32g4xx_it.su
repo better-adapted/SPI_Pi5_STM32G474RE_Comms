@@ -1,0 +1,6 @@
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:72:6:NMI_Handler	4	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:85:6:HardFault_Handler	4	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:100:6:SVC_Handler	4	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:113:6:PendSV_Handler	4	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:126:6:SysTick_Handler	8	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:147:6:SPI1_IRQHandler	8	static

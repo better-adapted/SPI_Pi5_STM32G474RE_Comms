@@ -1,0 +1,9 @@
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:80:19:SPI1_TEST_SEND	8	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:90:5:main	16	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:194:6:SystemClock_Config	88	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:241:13:MX_SPI1_Init	8	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:280:13:MX_GPIO_Init	16	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:301:6:HAL_SPI_TxRxCpltCallback	16	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:319:6:HAL_SPI_ErrorCallback	16	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:331:17:Buffercmp	24	static
+D:/mc2_dev/SPI_Pi5_STM32G474RE_Comms/SPI_FullDuplex_ComIT_Slave/Src/main.c:352:6:Error_Handler	8	static
