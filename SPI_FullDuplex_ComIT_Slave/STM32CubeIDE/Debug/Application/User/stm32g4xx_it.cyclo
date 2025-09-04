@@ -1,0 +1,6 @@
+C:/Users/adam_/STM32CubeIDE/workspace_1.19.0_demos/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:72:6:NMI_Handler	1
+C:/Users/adam_/STM32CubeIDE/workspace_1.19.0_demos/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:85:6:HardFault_Handler	1
+C:/Users/adam_/STM32CubeIDE/workspace_1.19.0_demos/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:100:6:SVC_Handler	1
+C:/Users/adam_/STM32CubeIDE/workspace_1.19.0_demos/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:113:6:PendSV_Handler	1
+C:/Users/adam_/STM32CubeIDE/workspace_1.19.0_demos/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:126:6:SysTick_Handler	1
+C:/Users/adam_/STM32CubeIDE/workspace_1.19.0_demos/SPI_FullDuplex_ComIT_Slave/Src/stm32g4xx_it.c:147:6:SPI1_IRQHandler	1
