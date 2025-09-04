@@ -79,22 +79,18 @@ static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferL
 int Transfer_Error_Counter=0;
 int Transfer_Process_Counter=0;
 int Transfer_Init=1;
+
+HAL_StatusTypeDef SPI1_TEST_SEND()
+{
+	return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 111);
+}
+
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
-
-static HAL_StatusTypeDef state_res;
-
-volatile HAL_StatusTypeDef tx_rx_res;
-
-HAL_StatusTypeDef SPI_Test_RX()
-{
-	 return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128);
-}
-
 int main(void)
 {
 
@@ -144,12 +140,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  state_res = HAL_SPI_GetState(&hspi1);
+	  HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
 
 	  if(Transfer_Init)
 	  {
-		  tx_rx_res = SPI_Test_RX();
-		  if ( tx_rx_res != HAL_OK)
+		  HAL_StatusTypeDef res = SPI1_TEST_SEND();
+		  if ( res != HAL_OK)
 		  {
 		    /* Transfer error in transmission process */
 		    Error_Handler();
@@ -165,16 +161,21 @@ int main(void)
 	  {
 	    case TRANSFER_COMPLETE :
 	      /*##-3- Compare the sent and received buffers ##############################*/
-		// all good!
-		BSP_LED_Toggle(LED2);
-		wTransferState = TRANSFER_PROCESSED;
-		Transfer_Process_Counter++;
-
+	      //if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128)==0)
+	      {
+	        // all good!
+	    	BSP_LED_Toggle(LED2);
+	    	wTransferState = TRANSFER_PROCESSED;
+	    	Transfer_Process_Counter++;
+	      }
 	      break;
 
 	    case TRANSFER_ERROR:
 			Transfer_Error_Counter++;
-			  //Transfer_Init=1;
+			wTransferState = TRANSFER_PROCESSED;
+			HAL_SPI_DeInit(&hspi1);
+			MX_SPI1_Init();
+			Transfer_Init=1;
 	      break;
 	  }
   }
@@ -318,7 +319,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
   /* Turn LED2 on: Transfer in transmission/reception process is complete */
   wTransferState = TRANSFER_COMPLETE;
 
-  tx_rx_res = SPI_Test_RX();
+  SPI1_TEST_SEND();
 
   callbacks++;
 }

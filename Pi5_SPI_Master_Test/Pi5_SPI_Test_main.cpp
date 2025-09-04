@@ -156,12 +156,10 @@ int bytes = BYTES;
 int speed = SPEED;
 int loops = LOOPS;
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
-
 
 int main(int argc, char *argv[])
 {
@@ -195,7 +193,7 @@ int main(int argc, char *argv[])
 
 	if (fd < 0)
 		return 1;
-	
+
 	for (i = 0; i < loops; i++)
 		{
 			char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
