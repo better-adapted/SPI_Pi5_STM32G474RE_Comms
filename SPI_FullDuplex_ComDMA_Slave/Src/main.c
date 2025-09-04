@@ -91,7 +91,6 @@ HAL_StatusTypeDef SPI1_TEST_SEND()
   * @brief  The application entry point.
   * @retval int
   */
-
 int main(void)
 {
 
