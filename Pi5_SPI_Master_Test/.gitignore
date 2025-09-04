@@ -1,6 +1,5 @@
 .visualgdb
 .vs
 *.o
-*.mak
 *.old
 *.dep

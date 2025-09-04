@@ -172,7 +172,10 @@ int main(void)
 
 	    case TRANSFER_ERROR:
 			Transfer_Error_Counter++;
-			  //Transfer_Init=1;
+			wTransferState = TRANSFER_PROCESSED;
+			HAL_SPI_DeInit(&hspi1);
+			MX_SPI1_Init();
+			Transfer_Init=1;
 	      break;
 	  }
   }
