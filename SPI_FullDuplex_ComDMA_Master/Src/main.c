@@ -55,6 +55,16 @@ DMA_HandleTypeDef hdma_spi1_rx;
 /* USER CODE BEGIN PV */
 /* Buffer used for transmission */
 uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
+//uint8_t aTxBuffer[]   = "tmuwhgbwguygmliawromewzzjebiisyendbbfdluaxqzwmizmkumzoofoblglvnlwjrskthmsjhedgypxamwvgncowmwiurbvdeusykeevcrodvx";
+
+// seems to match  CRC-16/UMTS
+// https://crccalc.com/?crc=****SPI%20-%20Two%20Boards%20communication%20based%20on%20DMA%20****%20SPI%20Message%20********%20SPI%20Message%20********%20SPI%20Message%20****&method=CRC-16&datatype=ascii&outtype=hex
+// ioc settings CRC16 with X0+X2+X15
+// 2A 2A 2A 2A 53 50 49 20 2D 20 54 77 6F 20 42 6F 61 72 64 73 20 63 6F 6D 6D 75 6E 69 63 61 74 69 6F 6E 20 62 61 73 65 64 20 6F 6E 20 44 4D 41 20 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A
+// = 73 C2 = 0x73C2
+// website says :
+// Result	Check	Poly	Init	RefIn	RefOut	XorOut
+// 0x73C2	0xFEE8	0x8005	0x0000	false	false	0x0000
 
 /* Buffer used for reception */
 uint8_t aRxBuffer[BUFFERSIZE];
@@ -84,6 +94,12 @@ void SPI_SC_Low()
 void SPI_SC_High()
 {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+}
+
+void SPI_SEND()
+{
+	SPI_SC_Low();
+	HAL_SPI_Transmit_DMA(&hspi1, (uint8_t *)aTxBuffer, BUFFERSIZE);
 }
 
 /* USER CODE END 0 */
@@ -136,30 +152,8 @@ int main(void)
 
   /* Configure User push-button button */
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
-  /* Wait for User push-button press before starting the Communication */
-/*  while (BSP_PB_GetState(BUTTON_USER) != GPIO_PIN_SET)
-  {
-    BSP_LED_Toggle(LED2);
-    HAL_Delay(100);
-  }
-  BSP_LED_Off(LED2);*/
 
-  /*##-1- Start the Full Duplex Communication process ########################*/
-  /* While the SPI in TransmitReceive process, user can transmit data through
-     "aTxBuffer" buffer & receive data through "aRxBuffer" */
-  SPI_SC_Low();
-  if (HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE) != HAL_OK)
-  {
-    /* Transfer error in transmission process */
-    Error_Handler();
-  }
-
-  /*##-2- Wait for the end of the transfer ###################################*/
-  /*  Before starting a new communication transfer, you must wait the callback call
-      to get the transfer complete confirmation or an error detection.
-      For simplicity reasons, this example is just waiting till the end of the
-      transfer, but application may perform other tasks while transfer operation
-      is ongoing. */
+  SPI_SEND();
 
   /* USER CODE END 2 */
 
@@ -179,12 +173,10 @@ int main(void)
 		case TRANSFER_COMPLETE :
 		  /*##-3- Compare the sent and received buffers ##############################*/
 			  HAL_Delay(10);
-			  SPI_SC_Low();
-			  HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE);
+			  SPI_SEND();
 		  break;
 
 		default :
-		  //Error_Handler();
 		  break;
 	  }
 
@@ -265,9 +257,9 @@ static void MX_SPI1_Init(void)
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 7;
-  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_ENABLE;
+  hspi1.Init.CRCPolynomial = 32773;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_16BIT;
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
@@ -342,6 +334,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
   BSP_LED_Toggle(LED2);
   wTransferState = TRANSFER_COMPLETE;
   SPI_SC_High();
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	  /* Turn LED2 on: Transfer in transmission/reception process is complete */
+	  BSP_LED_Toggle(LED2);
+	  wTransferState = TRANSFER_COMPLETE;
+	  SPI_SC_High();
 }
 
 /**
