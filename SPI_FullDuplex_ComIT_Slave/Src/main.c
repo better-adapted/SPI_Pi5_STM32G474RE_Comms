@@ -1,11 +1,11 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    SPI/SPI_FullDuplex_ComDMA_Master/Src/main.c
+  * @file    SPI/SPI_FullDuplex_ComIT_Slave/Src/main.c
   * @author  MCD Application Team
   * @brief   This sample code shows how to use STM32G4xx SPI HAL API to transmit
   *          and receive a data buffer with a communication process based on
-  *          DMA transfer.
+  *          Interrupt transfer.
   *          The communication is done using 2 Boards.
   ******************************************************************************
   * @attention
@@ -38,7 +38,8 @@ enum
 {
   TRANSFER_WAIT,
   TRANSFER_COMPLETE,
-  TRANSFER_ERROR
+  TRANSFER_ERROR,
+  TRANSFER_PROCESSED
 };
 /* USER CODE END PD */
 
@@ -49,30 +50,16 @@ enum
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
-DMA_HandleTypeDef hdma_spi1_tx;
-DMA_HandleTypeDef hdma_spi1_rx;
 
 /* USER CODE BEGIN PV */
 /* Buffer used for transmission */
-uint8_t aTxBuffer[]   = "tmuwhgbwguygmliawromewzzjebiisyendbbfdluaxqzwmizmkumzoofoblglvnlwjrskthmsjhedgypxamwvgncowmwiurbvdeusykeevcrodvx";
-// =  0x613A as CRC-16/UMTS - buffer 61 then 3A as last byte.
-// RAW BYTES[112] = 74 6D 75 77 68 67 62 77 67 75 79 67 6D 6C 69 61 77 72 6F 6D 65 77 7A 7A 6A 65 62 69 69 73 79 65 6E 64 62 62 66 64 6C 75 61 78 71 7A 77 6D 69 7A 6D 6B 75 6D 7A 6F 6F 66 6F 62 6C 67 6C 76 6E 6C 77 6A 72 73 6B 74 68 6D 73 6A 68 65 64 67 79 70 78 61 6D 77 76 67 6E 63 6F 77 6D 77 69 75 72 62 76 64 65 75 73 79 6B 65 65 76 63 72 6F 64 76 78 61 3A
-// Result	Check	Poly	Init	RefIn	RefOut	XorOut
-// 0x613A	0xFEE8	0x8005	0x0000	false	false	0x0000
-
-
-//uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-// seems to match  CRC-16/UMTS
-// https://crccalc.com/?crc=****SPI%20-%20Two%20Boards%20communication%20based%20on%20DMA%20****%20SPI%20Message%20********%20SPI%20Message%20********%20SPI%20Message%20****&method=CRC-16&datatype=ascii&outtype=hex
-// ioc settings CRC16 with X0+X2+X15
-// RAW BYTES[112] 2A 2A 2A 2A 53 50 49 20 2D 20 54 77 6F 20 42 6F 61 72 64 73 20 63 6F 6D 6D 75 6E 69 63 61 74 69 6F 6E 20 62 61 73 65 64 20 6F 6E 20 44 4D 41 20 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A
-// = 73 C2 = 0x73C2
-// website says :
-// Result	Check	Poly	Init	RefIn	RefOut	XorOut
-// 0x73C2	0xFEE8	0x8005	0x0000	false	false	0x0000
+uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on Interrupt **** SPI Message ******** SPI Message ******** SPI Message ****";
 
 /* Buffer used for reception */
 uint8_t aRxBuffer[BUFFERSIZE];
+int Transfer_Error_Counter=0;
+int Transfer_Process_Counter=0;
+int Transfer_Init=1;
 
 /* transfer state */
 __IO uint32_t wTransferState = TRANSFER_WAIT;
@@ -82,31 +69,18 @@ __IO uint32_t wTransferState = TRANSFER_WAIT;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
+/* Private function prototypes -----------------------------------------------*/
 static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferLength);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-void SPI_SC_Low()
+HAL_StatusTypeDef SPI1_TEST_SEND()
 {
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+	return HAL_SPI_TransmitReceive_IT(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 111);
 }
-
-void SPI_SC_High()
-{
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-}
-
-void SPI_SEND()
-{
-	SPI_SC_Low();
-	HAL_SPI_Transmit_DMA(&hspi1, (uint8_t *)aTxBuffer, BUFFERSIZE);
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -148,17 +122,22 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* Configure LED2 */
   BSP_LED_Init(LED2);
 
-  /* Configure User push-button button */
-  BSP_PB_Init(BUTTON_USER, BUTTON_MODE_GPIO);
+  /*##-1- Start the Full Duplex Communication process ########################*/
+  /* While the SPI in TransmitReceive process, user can transmit data through
+     "aTxBuffer" buffer & receive data through "aRxBuffer" */
 
-  SPI_SEND();
+  /*##-2- Wait for the end of the transfer ###################################*/
+  /*  Before starting a new communication transfer, you must wait the callback call
+      to get the transfer complete confirmation or an error detection.
+      For simplicity reasons, this example is just waiting till the end of the
+      transfer, but application may perform other tasks while transfer operation
+      is ongoing. */
 
   /* USER CODE END 2 */
 
@@ -169,23 +148,41 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
+
+	  if(Transfer_Init)
+	  {
+		  HAL_StatusTypeDef res = SPI1_TEST_SEND();
+		  if ( res != HAL_OK)
+		  {
+		    /* Transfer error in transmission process */
+		    Error_Handler();
+		  }
+		  Transfer_Init=0;
+	  }
+
 	  while (wTransferState == TRANSFER_WAIT)
 	  {
 	  }
 
 	  switch (wTransferState)
 	  {
-		case TRANSFER_COMPLETE :
-		  /*##-3- Compare the sent and received buffers ##############################*/
-			  HAL_Delay(10);
-			  SPI_SEND();
-		  break;
+	    case TRANSFER_COMPLETE :
+	      /*##-3- Compare the sent and received buffers ##############################*/
+	      {
+	        // all good!
+	    	BSP_LED_Toggle(LED2);
+	    	wTransferState = TRANSFER_PROCESSED;
+	    	Transfer_Process_Counter++;
+	      }
+	      break;
 
-		default :
-		  break;
+	    case TRANSFER_ERROR:
+			Transfer_Error_Counter++;
+			  //Transfer_Init=1;
+	      break;
 	  }
-
-
   }
   /* USER CODE END 3 */
 }
@@ -253,13 +250,12 @@ static void MX_SPI1_Init(void)
   /* USER CODE END SPI1_Init 1 */
   /* SPI1 parameter configuration*/
   hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Mode = SPI_MODE_SLAVE;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_ENABLE;
@@ -277,49 +273,18 @@ static void MX_SPI1_Init(void)
 }
 
 /**
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_DMAMUX1_CLK_ENABLE();
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
-  /* DMA1_Channel3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
@@ -329,24 +294,19 @@ static void MX_GPIO_Init(void)
 /**
   * @brief  TxRx Transfer completed callback.
   * @param  hspi: SPI handle
-  * @note   This example shows a simple way to report end of DMA TxRx transfer, and
+  * @note   This example shows a simple way to report end of Interrupt TxRx transfer, and
   *         you can add your own implementation.
   * @retval None
   */
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  /* Turn LED2 on: Transfer in transmission/reception process is complete */
-  BSP_LED_Toggle(LED2);
-  wTransferState = TRANSFER_COMPLETE;
-  SPI_SC_High();
-}
-
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
-{
+	  static int callbacks;
 	  /* Turn LED2 on: Transfer in transmission/reception process is complete */
-	  BSP_LED_Toggle(LED2);
 	  wTransferState = TRANSFER_COMPLETE;
-	  SPI_SC_High();
+
+	  SPI1_TEST_SEND();
+
+	  callbacks++;
 }
 
 /**
@@ -393,11 +353,10 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-	SPI_SC_High();
-
-	while (1)
+  while (1)
   {
     /* Toggle LED2 for error */
+    BSP_LED_Toggle(LED2);
     HAL_Delay(1000);
   }
   /* USER CODE END Error_Handler_Debug */

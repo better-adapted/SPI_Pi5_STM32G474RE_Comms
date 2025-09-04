@@ -36,34 +36,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := SPI_FullDuplex_ComDMA_Master
+BUILD_ARTIFACT_NAME := SPI_FullDuplex_ComIT_Slave
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-SPI_FullDuplex_ComDMA_Master.elf \
+SPI_FullDuplex_ComIT_Slave.elf \
 
 MAP_FILES += \
-SPI_FullDuplex_ComDMA_Master.map \
+SPI_FullDuplex_ComIT_Slave.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-SPI_FullDuplex_ComDMA_Master.list \
+SPI_FullDuplex_ComIT_Slave.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: SPI_FullDuplex_ComDMA_Master.elf secondary-outputs
+main-build: SPI_FullDuplex_ComIT_Slave.elf secondary-outputs
 
 # Tool invocations
-SPI_FullDuplex_ComDMA_Master.elf SPI_FullDuplex_ComDMA_Master.map: $(OBJS) $(USER_OBJS) D:\mc2_dev\SPI_Pi5_STM32G474RE_Comms\SPI_FullDuplex_ComDMA_Master\STM32CubeIDE\STM32G474RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "SPI_FullDuplex_ComDMA_Master.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\mc2_dev\SPI_Pi5_STM32G474RE_Comms\SPI_FullDuplex_ComDMA_Master\STM32CubeIDE\STM32G474RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SPI_FullDuplex_ComDMA_Master.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+SPI_FullDuplex_ComIT_Slave.elf SPI_FullDuplex_ComIT_Slave.map: $(OBJS) $(USER_OBJS) C:\Users\adam_\STM32CubeIDE\workspace_1.19.0_demos\SPI_FullDuplex_ComIT_Slave\STM32CubeIDE\STM32G474RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "SPI_FullDuplex_ComIT_Slave.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\adam_\STM32CubeIDE\workspace_1.19.0_demos\SPI_FullDuplex_ComIT_Slave\STM32CubeIDE\STM32G474RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SPI_FullDuplex_ComIT_Slave.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -72,14 +72,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-SPI_FullDuplex_ComDMA_Master.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "SPI_FullDuplex_ComDMA_Master.list"
+SPI_FullDuplex_ComIT_Slave.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "SPI_FullDuplex_ComIT_Slave.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) SPI_FullDuplex_ComDMA_Master.elf SPI_FullDuplex_ComDMA_Master.list SPI_FullDuplex_ComDMA_Master.map default.size.stdout
+	-$(RM) SPI_FullDuplex_ComIT_Slave.elf SPI_FullDuplex_ComIT_Slave.list SPI_FullDuplex_ComIT_Slave.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    SPI/SPI_FullDuplex_ComDMA_Master/Inc/stm32g4xx_it.h
+  * @file    SPI/SPI_FullDuplex_ComIT_Slave/Inc/main.h
   * @author  MCD Application Team
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @brief   Header for main.c module
   ******************************************************************************
   * @attention
   *
@@ -19,16 +19,19 @@
 /* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32G4xx_IT_H
-#define __STM32G4xx_IT_H
+#ifndef __MAIN_H
+#define __MAIN_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* Includes ------------------------------------------------------------------*/
+#include "stm32g4xx_hal.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32g4xx_nucleo.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -43,23 +46,25 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void SVC_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
-void DMA1_Channel2_IRQHandler(void);
-void DMA1_Channel3_IRQHandler(void);
+void Error_Handler(void);
+
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
+
+/* Private defines -----------------------------------------------------------*/
+
+/* USER CODE BEGIN Private defines */
+/* Size of buffer */
+#define BUFFERSIZE                       (COUNTOF(aTxBuffer) - 1)
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32G4xx_IT_H */
+#endif /* __MAIN_H */

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>SPI_FullDuplex_ComDMA_Master</name>
+	<name>SPI_FullDuplex_ComIT_Slave</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -34,9 +34,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>SPI_FullDuplex_ComDMA_Master.ioc</name>
+			<name>SPI_FullDuplex_ComIT_Slave.ioc</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/SPI_FullDuplex_ComDMA_Master.ioc</locationURI>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/SPI_FullDuplex_ComIT_Slave.ioc</locationURI>
 		</link>
 		<link>
 			<name>Doc/readme.txt</name>

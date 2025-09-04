@@ -85,6 +85,16 @@ int Transfer_Init=1;
   * @brief  The application entry point.
   * @retval int
   */
+
+static HAL_StatusTypeDef state_res;
+
+volatile HAL_StatusTypeDef tx_rx_res;
+
+HAL_StatusTypeDef SPI_Test_RX()
+{
+	 return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128);
+}
+
 int main(void)
 {
 
@@ -134,12 +144,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
+	  state_res = HAL_SPI_GetState(&hspi1);
 
 	  if(Transfer_Init)
 	  {
-		  HAL_StatusTypeDef res = HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE);
-		  if ( res != HAL_OK)
+		  tx_rx_res = SPI_Test_RX();
+		  if ( tx_rx_res != HAL_OK)
 		  {
 		    /* Transfer error in transmission process */
 		    Error_Handler();
@@ -155,13 +165,11 @@ int main(void)
 	  {
 	    case TRANSFER_COMPLETE :
 	      /*##-3- Compare the sent and received buffers ##############################*/
-	      if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128)==0)
-	      {
-	        // all good!
-	    	BSP_LED_Toggle(LED2);
-	    	wTransferState = TRANSFER_PROCESSED;
-	    	Transfer_Process_Counter++;
-	      }
+		// all good!
+		BSP_LED_Toggle(LED2);
+		wTransferState = TRANSFER_PROCESSED;
+		Transfer_Process_Counter++;
+
 	      break;
 
 	    case TRANSFER_ERROR:
@@ -244,9 +252,9 @@ static void MX_SPI1_Init(void)
   hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 7;
-  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_ENABLE;
+  hspi1.Init.CRCPolynomial = 32773;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_16BIT;
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
@@ -310,7 +318,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
   /* Turn LED2 on: Transfer in transmission/reception process is complete */
   wTransferState = TRANSFER_COMPLETE;
 
-  volatile HAL_StatusTypeDef res = HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, BUFFERSIZE);
+  tx_rx_res = SPI_Test_RX();
 
   callbacks++;
 }
