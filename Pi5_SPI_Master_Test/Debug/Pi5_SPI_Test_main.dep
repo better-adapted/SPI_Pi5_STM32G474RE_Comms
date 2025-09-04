@@ -178,19 +178,6 @@ Debug/Pi5_SPI_Test_main.o: Pi5_SPI_Test_main.cpp \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\include\c++\12/bits/ostream.tcc \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\include\c++\12/istream \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\include\c++\12/bits/istream.tcc \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/string.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/strings.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/unistd.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/posix_opt.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/environments.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/confname.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/getopt_posix.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/getopt_core.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/unistd_ext.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/close_range.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\include\c++\12/stdlib.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/getopt.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/getopt_ext.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/fcntl.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/fcntl.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/fcntl-linux.h \
@@ -198,16 +185,10 @@ Debug/Pi5_SPI_Test_main.o: Pi5_SPI_Test_main.cpp \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/falloc.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/stat.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/struct_stat.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/sys/ioctl.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/ioctls.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/asm/ioctls.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/asm-generic/ioctls.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/ioctl.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/asm/ioctl.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/asm-generic/ioctl.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/ioctl-types.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/sys/ttydefaults.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/sys/time.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/getopt.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/getopt_core.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/getopt_ext.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/spi/spidev.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/types.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/asm/types.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/asm-generic/types.h \
@@ -218,6 +199,25 @@ Debug/Pi5_SPI_Test_main.o: Pi5_SPI_Test_main.cpp \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/stddef.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/asm/posix_types.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/asm-generic/posix_types.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/spi/spidev.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/ioctl.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/asm/ioctl.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/asm-generic/ioctl.h \
  c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/spi/spi.h \
- c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/const.h
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/const.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\include\c++\12/stdlib.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/string.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/strings.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/sys/ioctl.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/ioctls.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/asm/ioctls.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/asm-generic/ioctls.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/ioctl-types.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/sys/ttydefaults.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/sys/time.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/unistd.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/posix_opt.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/environments.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/confname.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/getopt_posix.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include\aarch64-linux-gnu/bits/unistd_ext.h \
+ c:\sysgcc\raspberry64\aarch64-linux-gnu\sysroot\usr\include/linux/close_range.h

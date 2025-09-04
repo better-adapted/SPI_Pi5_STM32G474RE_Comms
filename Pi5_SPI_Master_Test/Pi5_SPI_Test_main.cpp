@@ -8,18 +8,17 @@ using namespace std;
  * Public Domain
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <getopt.h>
 #include <fcntl.h>
+#include <getopt.h>
+#include <linux/spi/spidev.h>
+#include <linux/types.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#include <linux/types.h>
-#include <linux/spi/spidev.h>
-
+#include <unistd.h>
 
 /*
 spi-driver-speed.c
@@ -30,7 +29,7 @@ gcc -o spi-driver-speed spi-driver-speed.c
 */
 
 #define LOOPS 10000000
-#define SPEED 1000000
+#define SPEED 1280000
 #define BYTES 128
 
 double time_time(void)
@@ -157,6 +156,13 @@ int bytes = BYTES;
 int speed = SPEED;
 int loops = LOOPS;
 
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+
+
+
 int main(int argc, char *argv[])
 {
 	char sz[] = "Hello, World!"; // Hover mouse over "sz" while debugging to see its contents
@@ -189,15 +195,14 @@ int main(int argc, char *argv[])
 
 	if (fd < 0)
 		return 1;
-
+	
 	for (i = 0; i < loops; i++)
 		{
-			TXBuf[0] = 0xFF;
-			TXBuf[1] = i;
-			TXBuf[2] = 0xFF;
-
 			char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-			spiXfer(fd, speed, aTxBuffer, RXBuf, bytes);
+			aTxBuffer[111] = 0x73;
+			aTxBuffer[112] = 0xC2;
+
+			spiXfer(fd, speed, aTxBuffer, RXBuf, 113);
 
 			usleep(1000);
 		}
