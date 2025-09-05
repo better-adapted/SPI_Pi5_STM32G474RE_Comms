@@ -72,6 +72,7 @@ uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI 
 // Result	Check	Poly	Init	RefIn	RefOut	XorOut
 // 0x73C2	0xFEE8	0x8005	0x0000	false	false	0x0000
 
+//uint8_t aTxBuffer[]   = "well this is just to see what crc does with a shorter packet?"; // 0x7A33
 
 /* Buffer used for reception */
 uint8_t aRxBuffer[BUFFERSIZE];
@@ -94,9 +95,16 @@ static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferL
 /* USER CODE BEGIN 0 */
 int Transfer_Error_Counter=0;
 int Transfer_Process_Counter=0;
+int Transfer_Process_CS_LOW_Counter=0;
+int Transfer_Process_CS_HIGH_Counter=0;
+
 int Transfer_CS_Pin_High_Counter=0;
-int Transfer_Init=0;
-int Test_EXT4_Counter=1;
+int Transfer_Init=1;
+int Test_EXT4_Counter=0;
+
+#define SPI1_CS_PIN                  GPIO_PIN_4
+#define SPI1_CS_PORT                 GPIOA
+#define SPI1_CS_EXTI_IRQn            EXTI4_IRQn
 
 
 HAL_StatusTypeDef SPI1_TEST_SEND()
@@ -108,19 +116,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	Transfer_CS_Pin_High_Counter++;
 }
+
+int SPI1_Get_CS()
+{
+	return HAL_GPIO_ReadPin(SPI1_CS_PORT, SPI1_CS_PIN);
+}
+
 /* USER CODE END 0 */
+
 
 void SPI1_PA4_EN_Intterrupt()
 {
 	  GPIO_InitTypeDef GPIO_InitStruct = {0};
-	  GPIO_InitStruct.Pin = GPIO_PIN_4;
+	  GPIO_InitStruct.Pin = SPI1_CS_PIN;
 	  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
 	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	  HAL_GPIO_Init(SPI1_CS_PORT, &GPIO_InitStruct);
 
 	  /* EXTI interrupt init*/
-	  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-	  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+	  HAL_NVIC_SetPriority(SPI1_CS_EXTI_IRQn, 0, 0);
+	  HAL_NVIC_EnableIRQ(SPI1_CS_EXTI_IRQn);
 }
 /**
   * @brief  The application entry point.
@@ -214,6 +229,15 @@ int main(void)
 	    	BSP_LED_Toggle(LED2);
 	    	wTransferState = TRANSFER_PROCESSED;
 	    	Transfer_Process_Counter++;
+
+	    	if(SPI1_Get_CS()==0)
+	    	{
+	    		Transfer_Process_CS_LOW_Counter++;
+	    	}
+	    	else
+	    	{
+	    		Transfer_Process_CS_HIGH_Counter++;
+	    	}
 	      }
 	      break;
 

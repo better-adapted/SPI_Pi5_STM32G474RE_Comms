@@ -196,19 +196,24 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < loops; i++)
 		{
-			char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-			aTxBuffer[111] = 0x73;
-			aTxBuffer[112] = 0xC2;
 
 			if (i > 0)
 				{
-					if ((i % 5) > 0)
+					if ((i % 100) > 0)
 						{
+							char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
+							aTxBuffer[111] = 0x73;
+							aTxBuffer[112] = 0xC2;
+
 							spiXfer(fd, speed, aTxBuffer, RXBuf, 113);
 						}
 					else
 						{
-							spiXfer(fd, speed, aTxBuffer, RXBuf, 110);
+							char aTxBuffer[128] = "well this is just to see what crc does with a shorter packet?";
+							aTxBuffer[61] = 0x7A;
+							aTxBuffer[62] = 0x33;
+							
+							spiXfer(fd, speed, aTxBuffer, RXBuf, 63);
 						}
 				}
 
