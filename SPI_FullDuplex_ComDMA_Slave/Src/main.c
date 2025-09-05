@@ -99,6 +99,12 @@ int Transfer_Process_CS_LOW_Counter=0;
 int Transfer_Process_CS_HIGH_Counter=0;
 
 int Transfer_CS_Pin_High_Counter=0;
+
+int Transfer_CS_Pin_High_Busy_Counter=0;
+int Transfer_CS_Pin_High_Processed_Counter=0;
+
+int Transfer_CS_Pin_High_States[HAL_SPI_STATE_ABORT+1]={};
+
 int Transfer_Init=1;
 int Test_EXT4_Counter=0;
 
@@ -115,6 +121,17 @@ HAL_StatusTypeDef SPI1_TEST_SEND()
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	Transfer_CS_Pin_High_Counter++;
+
+	HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
+	if(state_res<=HAL_SPI_STATE_ABORT)
+	{
+		Transfer_CS_Pin_High_States[state_res]++;
+	}
+
+	if(wTransferState == TRANSFER_PROCESSED)
+	{
+		Transfer_CS_Pin_High_Processed_Counter++;
+	}
 }
 
 int SPI1_Get_CS()

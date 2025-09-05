@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 
 			if (i > 0)
 				{
-					if ((i % 100) > 0)
+					if ((i % 200) > 0)
 						{
 							char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
 							aTxBuffer[111] = 0x73;
@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
 							aTxBuffer[62] = 0x33;
 							
 							spiXfer(fd, speed, aTxBuffer, RXBuf, 63);
+							usleep(1000);
 						}
 				}
 
