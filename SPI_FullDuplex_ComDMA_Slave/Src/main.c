@@ -149,7 +149,7 @@ typedef struct
 	{
 		uint16_t length;
 		uint8_t command;
-		uint8_t buffer[128];
+		uint8_t buffer[1024];
 	} payload;
 	uint16_t crc;
 }SPI_Transfer_Base_t;
@@ -208,8 +208,8 @@ void Process_Buffer()
 HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 {
 	static uint32_t tx_counter;
-	memset(aRxBuffer,0xFF,sizeof(aRxBuffer));
-	memset(aTxBuffer,0,sizeof(aTxBuffer));
+	//memset(aRxBuffer,0xFF,sizeof(aRxBuffer));
+	//memset(aTxBuffer,0,sizeof(aTxBuffer));
 
 	SPI_Transfer_Base_t packet = {};
 

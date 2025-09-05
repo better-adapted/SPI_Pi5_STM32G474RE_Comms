@@ -181,7 +181,7 @@ typedef struct
 	{
 		uint16_t length;
 		uint8_t command;
-		uint8_t buffer[128];
+		uint8_t buffer[1024];
 	} payload;
 	uint16_t crc;
 }SPI_Transfer_Base_t;
@@ -309,7 +309,7 @@ main(int argc, char *argv[])
 
 							int res = spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
 
-							usleep(2000);
+							usleep(1000);
 						}
 					else
 						{
