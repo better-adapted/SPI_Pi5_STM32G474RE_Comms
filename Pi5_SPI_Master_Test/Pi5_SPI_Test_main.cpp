@@ -29,7 +29,7 @@ gcc -o spi-driver-speed spi-driver-speed.c
 */
 
 #define LOOPS 1000000
-#define SPEED 1280000
+#define SPEED 20000000
 #define BYTES 128
 
 double time_time(void)
