@@ -213,8 +213,6 @@ HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 
 	SPI_Transfer_Base_t packet = {};
 
-
-	pRandom=0;
 	if(pRandom)
 	{
 		// random payload

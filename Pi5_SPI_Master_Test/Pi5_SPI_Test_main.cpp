@@ -147,7 +147,7 @@ int spiXfer(int fd, unsigned speed, char *txBuf, char *rxBuf, unsigned count)
 	return err;
 }
 
-#define MAX_SPI_BUFSIZ 128
+#define MAX_SPI_BUFSIZ 16384
 
 char RXBuf[MAX_SPI_BUFSIZ];
 char TXBuf[MAX_SPI_BUFSIZ];
@@ -283,18 +283,33 @@ main(int argc, char *argv[])
 
 			if (i > 0)
 				{
-					if ((i % 50) > 0)
+					if ((i % 50000000) > 0)
 						{
 							SPI_Transfer_Base_t packet = {};
 							packet.payload.length = sizeof(packet) - 2;
 
-							sprintf((char *)packet.payload.buffer, "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****");
+							//sprintf((char *)packet.payload.buffer, "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****");
+
+							{
+								static uint32_t tx_counter;
+								packet.payload.buffer[4] = tx_counter >> 0;
+								packet.payload.buffer[5] = tx_counter >> 8;
+								packet.payload.buffer[6] = tx_counter >> 16;
+								packet.payload.buffer[7] = tx_counter >> 24;
+
+								for (int x = 8; x < sizeof(packet.payload.buffer); x++)
+									{
+										packet.payload.buffer[x] = rand();
+									}								
+							}
 
 							packet.crc = cal_crc((const uint8_t *)&packet, packet.payload.length);
 
 							memset(RXBuf, 0, sizeof(RXBuf));
 
-							spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
+							int res = spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
+
+							usleep(2000);
 						}
 					else
 						{
@@ -307,8 +322,6 @@ main(int argc, char *argv[])
 
 					Process_Buffer();
 				}
-
-			usleep(1000);
 		}
 
 	diff = time_time() - start;
