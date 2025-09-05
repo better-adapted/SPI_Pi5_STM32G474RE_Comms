@@ -200,7 +200,17 @@ int main(int argc, char *argv[])
 			aTxBuffer[111] = 0x73;
 			aTxBuffer[112] = 0xC2;
 
-			spiXfer(fd, speed, aTxBuffer, RXBuf, 113);
+			if (i > 0)
+				{
+					if ((i % 100) > 0)
+						{
+							spiXfer(fd, speed, aTxBuffer, RXBuf, 113);
+						}
+					else
+						{
+							spiXfer(fd, speed, aTxBuffer, RXBuf, 110);
+						}
+				}
 
 			usleep(1000);
 		}

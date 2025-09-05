@@ -173,8 +173,14 @@ int main(void)
 	    case TRANSFER_ERROR:
 			Transfer_Error_Counter++;
 			wTransferState = TRANSFER_PROCESSED;
+
+			// https://community.st.com/t5/stm32-mcus-products/restart-spi-dma-transmission/td-p/637909
+			HAL_SPI_DMAStop(&hspi1);
+			__HAL_RCC_SPI1_FORCE_RESET();
+			__HAL_RCC_SPI1_RELEASE_RESET();
 			HAL_SPI_DeInit(&hspi1);
 			MX_SPI1_Init();
+
 			Transfer_Init=1;
 	      break;
 	  }
