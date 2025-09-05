@@ -199,21 +199,16 @@ int main(int argc, char *argv[])
 
 			if (i > 0)
 				{
-					if ((i % 200) > 0)
+					if ((i % 20000) > 0)
 						{
 							char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-							aTxBuffer[111] = 0x73;
-							aTxBuffer[112] = 0xC2;
-
-							spiXfer(fd, speed, aTxBuffer, RXBuf, 113);
+							spiXfer(fd, speed, aTxBuffer, RXBuf,sizeof(aTxBuffer));
 						}
 					else
 						{
 							char aTxBuffer[128] = "well this is just to see what crc does with a shorter packet?";
-							aTxBuffer[61] = 0x7A;
-							aTxBuffer[62] = 0x33;
-							
-							spiXfer(fd, speed, aTxBuffer, RXBuf, 63);
+
+							spiXfer(fd, speed, aTxBuffer, RXBuf, sizeof(aTxBuffer));
 							usleep(1000);
 						}
 				}

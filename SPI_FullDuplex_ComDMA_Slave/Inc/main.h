@@ -60,7 +60,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 /* Size of buffer */
-#define BUFFERSIZE                       128
+#define SPI_TX_RX_BUFFERSIZE                       512
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

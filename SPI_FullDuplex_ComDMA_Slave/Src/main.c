@@ -55,14 +55,14 @@ DMA_HandleTypeDef hdma_spi1_rx;
 
 /* USER CODE BEGIN PV */
 /* Buffer used for transmission */
-//uint8_t aTxBuffer[]   = "tmuwhgbwguygmliawromewzzjebiisyendbbfdluaxqzwmizmkumzoofoblglvnlwjrskthmsjhedgypxamwvgncowmwiurbvdeusykeevcrodvx";
+//uint8_t aTxBuffer[SPI_TX_RX_BUFFERSIZE]   = "tmuwhgbwguygmliawromewzzjebiisyendbbfdluaxqzwmizmkumzoofoblglvnlwjrskthmsjhedgypxamwvgncowmwiurbvdeusykeevcrodvx";
 // =  0x613A as CRC-16/UMTS - buffer 61 then 3A as last byte.
 // RAW BYTES[112] = 74 6D 75 77 68 67 62 77 67 75 79 67 6D 6C 69 61 77 72 6F 6D 65 77 7A 7A 6A 65 62 69 69 73 79 65 6E 64 62 62 66 64 6C 75 61 78 71 7A 77 6D 69 7A 6D 6B 75 6D 7A 6F 6F 66 6F 62 6C 67 6C 76 6E 6C 77 6A 72 73 6B 74 68 6D 73 6A 68 65 64 67 79 70 78 61 6D 77 76 67 6E 63 6F 77 6D 77 69 75 72 62 76 64 65 75 73 79 6B 65 65 76 63 72 6F 64 76 78 61 3A
 // Result	Check	Poly	Init	RefIn	RefOut	XorOut
 // 0x613A	0xFEE8	0x8005	0x0000	false	false	0x0000
 
 
-uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
+uint8_t aTxBuffer[SPI_TX_RX_BUFFERSIZE] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
 // seems to match  CRC-16/UMTS
 // https://crccalc.com/?crc=****SPI%20-%20Two%20Boards%20communication%20based%20on%20DMA%20****%20SPI%20Message%20********%20SPI%20Message%20********%20SPI%20Message%20****&method=CRC-16&datatype=ascii&outtype=hex
 // ioc settings CRC16 with X0+X2+X15
@@ -75,7 +75,7 @@ uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI 
 //uint8_t aTxBuffer[]   = "well this is just to see what crc does with a shorter packet?"; // 0x7A33
 
 /* Buffer used for reception */
-uint8_t aRxBuffer[BUFFERSIZE];
+uint8_t aRxBuffer[SPI_TX_RX_BUFFERSIZE];
 
 /* transfer state */
 __IO uint32_t wTransferState = TRANSFER_WAIT;
@@ -88,7 +88,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
-static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferLength);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -99,38 +99,63 @@ int Transfer_Process_CS_LOW_Counter=0;
 int Transfer_Process_CS_HIGH_Counter=0;
 
 int Transfer_CS_Pin_High_Counter=0;
-
 int Transfer_CS_Pin_High_Busy_Counter=0;
 int Transfer_CS_Pin_High_Processed_Counter=0;
-
+int Transfer_CS_Pin_High_Process_Now_Counter=0;
 int Transfer_CS_Pin_High_States[HAL_SPI_STATE_ABORT+1]={};
 
 int Transfer_Init=1;
-int Test_EXT4_Counter=0;
 
 #define SPI1_CS_PIN                  GPIO_PIN_4
 #define SPI1_CS_PORT                 GPIOA
 #define SPI1_CS_EXTI_IRQn            EXTI4_IRQn
 
 
+void Process_Buffer()
+{
+	// all good!
+	wTransferState = TRANSFER_PROCESSED;
+	Transfer_Process_Counter++;
+
+	int bytes_rx_in_DMA = SPI_TX_RX_BUFFERSIZE - hspi1.hdmarx->Instance->CNDTR;
+
+	if(SPI1_Get_CS()==0)
+	{
+		Transfer_Process_CS_LOW_Counter++;
+	}
+	else
+	{
+		Transfer_Process_CS_HIGH_Counter++;
+	}
+}
+
 HAL_StatusTypeDef SPI1_TEST_SEND()
 {
-	return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 111);
+	return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	Transfer_CS_Pin_High_Counter++;
-
-	HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
-	if(state_res<=HAL_SPI_STATE_ABORT)
+	if(GPIO_Pin==GPIO_PIN_4)
 	{
-		Transfer_CS_Pin_High_States[state_res]++;
-	}
+		Transfer_CS_Pin_High_Counter++;
 
-	if(wTransferState == TRANSFER_PROCESSED)
-	{
-		Transfer_CS_Pin_High_Processed_Counter++;
+		HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
+		if(state_res<=(HAL_StatusTypeDef)HAL_SPI_STATE_ABORT)
+		{
+			Transfer_CS_Pin_High_States[state_res]++;
+		}
+
+		if(wTransferState == TRANSFER_PROCESSED)
+		{
+			Transfer_CS_Pin_High_Processed_Counter++;
+		}
+		else
+		{
+			wTransferState = TRANSFER_COMPLETE;
+			Transfer_CS_Pin_High_Process_Now_Counter++;
+		}
+
 	}
 }
 
@@ -138,9 +163,6 @@ int SPI1_Get_CS()
 {
 	return HAL_GPIO_ReadPin(SPI1_CS_PORT, SPI1_CS_PIN);
 }
-
-/* USER CODE END 0 */
-
 
 void SPI1_PA4_EN_Intterrupt()
 {
@@ -154,6 +176,9 @@ void SPI1_PA4_EN_Intterrupt()
 	  HAL_NVIC_SetPriority(SPI1_CS_EXTI_IRQn, 0, 0);
 	  HAL_NVIC_EnableIRQ(SPI1_CS_EXTI_IRQn);
 }
+
+/* USER CODE END 0 */
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -193,16 +218,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-
-  if(Test_EXT4_Counter==0)
-  {
-	  MX_DMA_Init();
-	  MX_SPI1_Init();
-  }
-
+  MX_DMA_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  BSP_LED_Init(LED2);
 
+  BSP_LED_Init(LED2);
   SPI1_PA4_EN_Intterrupt();
   /* USER CODE END 2 */
 
@@ -210,11 +230,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(Test_EXT4_Counter)
-	  {
-		  continue;
-	  }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -239,23 +254,7 @@ int main(void)
 	  switch (wTransferState)
 	  {
 	    case TRANSFER_COMPLETE :
-	      /*##-3- Compare the sent and received buffers ##############################*/
-	      //if (Buffercmp((uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 128)==0)
-	      {
-	        // all good!
-	    	BSP_LED_Toggle(LED2);
-	    	wTransferState = TRANSFER_PROCESSED;
-	    	Transfer_Process_Counter++;
-
-	    	if(SPI1_Get_CS()==0)
-	    	{
-	    		Transfer_Process_CS_LOW_Counter++;
-	    	}
-	    	else
-	    	{
-	    		Transfer_Process_CS_HIGH_Counter++;
-	    	}
-	      }
+	    	Process_Buffer();
 	      break;
 
 	    case TRANSFER_ERROR:
@@ -268,7 +267,7 @@ int main(void)
 			__HAL_RCC_SPI1_RELEASE_RESET();
 			HAL_SPI_DeInit(&hspi1);
 			MX_SPI1_Init();
-			//SPI1_PA4_EN_Intterrupt();
+			SPI1_PA4_EN_Intterrupt();
 
 			Transfer_Init=1;
 	      break;
@@ -348,9 +347,9 @@ static void MX_SPI1_Init(void)
   hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_ENABLE;
-  hspi1.Init.CRCPolynomial = 32773;
-  hspi1.Init.CRCLength = SPI_CRC_LENGTH_16BIT;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
   hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
@@ -430,28 +429,6 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
   wTransferState = TRANSFER_ERROR;
-}
-
-/**
-  * @brief  Compares two buffers.
-  * @param  pBuffer1, pBuffer2: buffers to be compared.
-  * @param  BufferLength: buffer's length
-  * @retval 0  : pBuffer1 identical to pBuffer2
-  *         >0 : pBuffer1 differs from pBuffer2
-  */
-static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferLength)
-{
-  while (BufferLength--)
-  {
-    if ((*pBuffer1) != *pBuffer2)
-    {
-      return BufferLength;
-    }
-    pBuffer1++;
-    pBuffer2++;
-  }
-
-  return 0;
 }
 
 /* USER CODE END 4 */
