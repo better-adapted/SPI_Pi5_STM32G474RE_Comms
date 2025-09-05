@@ -29,7 +29,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+int SPI1_Get_CS();
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -93,16 +93,30 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int Transfer_Error_Counter=0;
-int Transfer_Process_Counter=0;
-int Transfer_Process_CS_LOW_Counter=0;
-int Transfer_Process_CS_HIGH_Counter=0;
+typedef struct
+{
+	uint32_t HAL_Error_Counter;
 
-int Transfer_CS_Pin_High_Counter=0;
-int Transfer_CS_Pin_High_Busy_Counter=0;
-int Transfer_CS_Pin_High_Processed_Counter=0;
-int Transfer_CS_Pin_High_Process_Now_Counter=0;
-int Transfer_CS_Pin_High_States[HAL_SPI_STATE_ABORT+1]={};
+	struct
+	{
+		uint32_t Interrupt_Counter;
+		uint32_t States[HAL_SPI_STATE_ABORT+1];
+	}CS_End;
+
+	struct
+	{
+		uint32_t Begin_Counter;
+		uint32_t End_Counter;
+		uint32_t Length_Max_Error;
+		uint32_t Length_DMA_Count_Error;
+		uint32_t CRC_Error_Counter;
+		uint32_t CRC_OK_Counter;
+
+	}Process;
+
+}SPI_Transfer_Status_t;
+
+SPI_Transfer_Status_t SPI_Transfer_Status={};
 
 int Transfer_Init=1;
 
@@ -110,23 +124,78 @@ int Transfer_Init=1;
 #define SPI1_CS_PORT                 GPIOA
 #define SPI1_CS_EXTI_IRQn            EXTI4_IRQn
 
+uint16_t cal_crc(const uint8_t *pBuffer,int pSize)
+{
+	uint16_t crc = 0xFFFF;
+	uint8_t temp;
+	for(int x=0;x<pSize;x++)
+	{
+			temp = pBuffer[x];
+			crc -= temp;
+	}
+
+	return crc;
+}
+
+typedef struct
+{
+	struct
+	{
+		uint16_t length;
+		uint8_t command;
+		uint8_t buffer[256];
+	} payload;
+	uint16_t crc;
+}SPI_Transfer_Base_t;
 
 void Process_Buffer()
 {
 	// all good!
-	wTransferState = TRANSFER_PROCESSED;
-	Transfer_Process_Counter++;
+	SPI_Transfer_Status.Process.Begin_Counter++;
 
-	int bytes_rx_in_DMA = SPI_TX_RX_BUFFERSIZE - hspi1.hdmarx->Instance->CNDTR;
+	SPI_Transfer_Base_t *packet = (SPI_Transfer_Base_t *)aRxBuffer;
 
-	if(SPI1_Get_CS()==0)
+	uint16_t Errors=0;
+	int Length_Ok=0;
+	int CRC_Ok=0;
+
+	if(packet->payload.length>sizeof(SPI_Transfer_Base_t))
 	{
-		Transfer_Process_CS_LOW_Counter++;
+		Errors=0x0001;
+		SPI_Transfer_Status.Process.Length_Max_Error++;
 	}
 	else
 	{
-		Transfer_Process_CS_HIGH_Counter++;
+		int bytes_rx_in_DMA = SPI_TX_RX_BUFFERSIZE - hspi1.hdmarx->Instance->CNDTR;
+		if(packet->payload.length == (bytes_rx_in_DMA)-2)
+		{
+			Length_Ok=1;
+		}
+		else
+		{
+			Errors=0x0002;
+			SPI_Transfer_Status.Process.Length_DMA_Count_Error++;
+		}
 	}
+
+
+	if(Length_Ok)
+	{
+		// ok packet length rx'f matches the DMA counter
+		uint16_t rx_crc = cal_crc((uint8_t*)&packet->payload,packet->payload.length);
+
+		if(packet->crc == rx_crc)
+		{
+			CRC_Ok=1;
+			SPI_Transfer_Status.Process.CRC_OK_Counter++;
+		}
+		else
+		{
+			SPI_Transfer_Status.Process.CRC_Error_Counter++;
+		}
+	}
+
+	SPI_Transfer_Status.Process.End_Counter++;
 }
 
 HAL_StatusTypeDef SPI1_TEST_SEND()
@@ -138,24 +207,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin==GPIO_PIN_4)
 	{
-		Transfer_CS_Pin_High_Counter++;
+		SPI_Transfer_Status.CS_End.Interrupt_Counter++;
 
 		HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
 		if(state_res<=(HAL_StatusTypeDef)HAL_SPI_STATE_ABORT)
 		{
-			Transfer_CS_Pin_High_States[state_res]++;
+			SPI_Transfer_Status.CS_End.States[state_res]++;
 		}
 
-		if(wTransferState == TRANSFER_PROCESSED)
-		{
-			Transfer_CS_Pin_High_Processed_Counter++;
-		}
-		else
-		{
-			wTransferState = TRANSFER_COMPLETE;
-			Transfer_CS_Pin_High_Process_Now_Counter++;
-		}
-
+		// just make this state - even if no bytes!
+		wTransferState = TRANSFER_COMPLETE;
 	}
 }
 
@@ -255,10 +316,13 @@ int main(void)
 	  {
 	    case TRANSFER_COMPLETE :
 	    	Process_Buffer();
+			__HAL_RCC_SPI1_FORCE_RESET();
+			__HAL_RCC_SPI1_RELEASE_RESET();
+			wTransferState = TRANSFER_PROCESSED;
 	      break;
 
 	    case TRANSFER_ERROR:
-			Transfer_Error_Counter++;
+	    	SPI_Transfer_Status.HAL_Error_Counter++;
 			wTransferState = TRANSFER_PROCESSED;
 
 			// https://community.st.com/t5/stm32-mcus-products/restart-spi-dma-transmission/td-p/637909

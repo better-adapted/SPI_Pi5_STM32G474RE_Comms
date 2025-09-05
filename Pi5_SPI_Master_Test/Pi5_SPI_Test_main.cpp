@@ -161,7 +161,32 @@ int loops = LOOPS;
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char *argv[])
+uint16_t call_crc(const uint8_t *pBuffer,int pSize)
+{
+	uint16_t crc = 0xFFFF;
+	uint8_t temp;
+	for(int x=0;x<pSize;x++)
+	{
+			temp = pBuffer[x];
+			crc -= temp;
+	}
+
+	return crc;
+}
+
+typedef struct
+{
+	struct
+	{
+		uint16_t length;
+		uint8_t command;
+		uint8_t buffer[256];
+	} payload;
+	uint16_t crc;
+}SPI_Transfer_Base_t;
+
+int
+main(int argc, char *argv[])
 {
 	char sz[] = "Hello, World!"; // Hover mouse over "sz" while debugging to see its contents
 	cout << sz << endl;					 //<================= Put a breakpoint here
@@ -201,8 +226,14 @@ int main(int argc, char *argv[])
 				{
 					if ((i % 20000) > 0)
 						{
-							char aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
-							spiXfer(fd, speed, aTxBuffer, RXBuf,sizeof(aTxBuffer));
+							SPI_Transfer_Base_t packet = {};
+							packet.payload.length = sizeof(packet) - 2;
+
+							sprintf((char *)packet.payload.buffer, "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****");
+
+							packet.crc = call_crc((const uint8_t *)&packet, packet.payload.length);
+
+							spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
 						}
 					else
 						{
