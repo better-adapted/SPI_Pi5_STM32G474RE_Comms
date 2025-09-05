@@ -224,7 +224,7 @@ main(int argc, char *argv[])
 
 			if (i > 0)
 				{
-					if ((i % 20000) > 0)
+					if ((i % 1000) > 0)
 						{
 							SPI_Transfer_Base_t packet = {};
 							packet.payload.length = sizeof(packet) - 2;
@@ -240,6 +240,7 @@ main(int argc, char *argv[])
 							char aTxBuffer[128] = "well this is just to see what crc does with a shorter packet?";
 
 							spiXfer(fd, speed, aTxBuffer, RXBuf, sizeof(aTxBuffer));
+							usleep(10000);
 							usleep(1000);
 						}
 				}

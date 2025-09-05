@@ -57,6 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SPI_Process_DBG_Pin GPIO_PIN_1
+#define SPI_Process_DBG_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 /* Size of buffer */

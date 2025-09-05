@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -123,6 +124,9 @@ int Transfer_Init=1;
 #define SPI1_CS_PIN                  GPIO_PIN_4
 #define SPI1_CS_PORT                 GPIOA
 #define SPI1_CS_EXTI_IRQn            EXTI4_IRQn
+
+#define SPI1_Process_DBG_PIN                  GPIO_PIN_1
+#define SPI1_Process_DBG_PORT                 GPIOA
 
 uint16_t cal_crc(const uint8_t *pBuffer,int pSize)
 {
@@ -315,10 +319,24 @@ int main(void)
 	  switch (wTransferState)
 	  {
 	    case TRANSFER_COMPLETE :
+	    	HAL_GPIO_WritePin(SPI_Process_DBG_GPIO_Port, SPI_Process_DBG_Pin, GPIO_PIN_SET);
+
 	    	Process_Buffer();
+
+	    	HAL_SPI_DMAStop(&hspi1);
+			HAL_SPI_Abort(&hspi1);
+
 			__HAL_RCC_SPI1_FORCE_RESET();
 			__HAL_RCC_SPI1_RELEASE_RESET();
+
+			memset(aRxBuffer,0xFF,sizeof(aRxBuffer));
+
+			HAL_StatusTypeDef res = HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
+
+
 			wTransferState = TRANSFER_PROCESSED;
+
+			HAL_GPIO_WritePin(SPI_Process_DBG_GPIO_Port, SPI_Process_DBG_Pin, GPIO_PIN_RESET);
 	      break;
 
 	    case TRANSFER_ERROR:
@@ -452,12 +470,23 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI_Process_DBG_GPIO_Port, SPI_Process_DBG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : SPI_Process_DBG_Pin */
+  GPIO_InitStruct.Pin = SPI_Process_DBG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(SPI_Process_DBG_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -476,9 +505,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   static int callbacks;
   /* Turn LED2 on: Transfer in transmission/reception process is complete */
-  wTransferState = TRANSFER_COMPLETE;
 
-  SPI1_TEST_SEND();
 
   callbacks++;
 }
