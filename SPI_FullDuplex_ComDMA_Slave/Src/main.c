@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 #include <string.h>
 /* USER CODE END Includes */
 
@@ -141,16 +142,18 @@ uint16_t cal_crc(const uint8_t *pBuffer,int pSize)
 	return crc;
 }
 
+#pragma pack(push, 1)
 typedef struct
 {
 	struct
 	{
 		uint16_t length;
 		uint8_t command;
-		uint8_t buffer[256];
+		uint8_t buffer[128];
 	} payload;
 	uint16_t crc;
 }SPI_Transfer_Base_t;
+#pragma pack(pop)
 
 void Process_Buffer()
 {
@@ -202,8 +205,46 @@ void Process_Buffer()
 	SPI_Transfer_Status.Process.End_Counter++;
 }
 
-HAL_StatusTypeDef SPI1_TEST_SEND()
+HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 {
+	static uint32_t tx_counter;
+	memset(aRxBuffer,0xFF,sizeof(aRxBuffer));
+	memset(aTxBuffer,0,sizeof(aTxBuffer));
+
+	SPI_Transfer_Base_t packet = {};
+
+
+	pRandom=0;
+	if(pRandom)
+	{
+		// random payload
+		packet.payload.buffer[4]=tx_counter>>0;
+		packet.payload.buffer[5]=tx_counter>>8;
+		packet.payload.buffer[6]=tx_counter>>16;
+		packet.payload.buffer[7]=tx_counter>>24;
+
+		for(int x=8;x<sizeof(packet.payload.buffer);x++)
+		{
+			packet.payload.buffer[x]=rand();
+		}
+	}
+	else
+	{
+		sprintf((char *)packet.payload.buffer, "Reply Message Blah Blah,%09ld,%09ld",tx_counter,HAL_GetTick());
+	}
+
+	packet.payload.length = sizeof(packet)-2;
+	packet.crc = cal_crc((const uint8_t *)&packet.payload, packet.payload.length);
+
+	tx_counter++;
+
+	uint8_t* byte_ptr=(uint8_t*)&packet;
+
+	for(int x=0;x<sizeof(packet);x++)
+	{
+		aTxBuffer[x]=byte_ptr[x];
+	}
+
 	return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
 }
 
@@ -303,7 +344,7 @@ int main(void)
 
 	  if(Transfer_Init)
 	  {
-		  HAL_StatusTypeDef res = SPI1_TEST_SEND();
+		  HAL_StatusTypeDef res = SPI1_TEST_SEND(1);
 		  if ( res != HAL_OK)
 		  {
 		    /* Transfer error in transmission process */
@@ -329,10 +370,7 @@ int main(void)
 			__HAL_RCC_SPI1_FORCE_RESET();
 			__HAL_RCC_SPI1_RELEASE_RESET();
 
-			memset(aRxBuffer,0xFF,sizeof(aRxBuffer));
-
-			HAL_StatusTypeDef res = HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
-
+			HAL_StatusTypeDef res = SPI1_TEST_SEND(1);
 
 			wTransferState = TRANSFER_PROCESSED;
 

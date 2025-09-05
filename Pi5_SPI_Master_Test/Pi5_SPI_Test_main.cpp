@@ -161,7 +161,7 @@ int loops = LOOPS;
 #include <stdio.h>
 #include <string.h>
 
-uint16_t call_crc(const uint8_t *pBuffer,int pSize)
+uint16_t cal_crc(const uint8_t *pBuffer,int pSize)
 {
 	uint16_t crc = 0xFFFF;
 	uint8_t temp;
@@ -174,16 +174,75 @@ uint16_t call_crc(const uint8_t *pBuffer,int pSize)
 	return crc;
 }
 
+#pragma pack(push, 1)
 typedef struct
 {
 	struct
 	{
 		uint16_t length;
 		uint8_t command;
-		uint8_t buffer[256];
+		uint8_t buffer[128];
 	} payload;
 	uint16_t crc;
 }SPI_Transfer_Base_t;
+#pragma pack(pop)
+
+typedef struct
+{
+	struct
+	{
+		uint32_t Begin_Counter;
+		uint32_t End_Counter;
+		uint32_t Length_Max_Error;
+		uint32_t Length_DMA_Count_Error;
+		uint32_t CRC_Error_Counter;
+		uint32_t CRC_OK_Counter;
+
+	} Process;
+
+} SPI_Transfer_Status_t;
+
+SPI_Transfer_Status_t SPI_Transfer_Status = {};
+
+void Process_Buffer()
+{
+	// all good!
+	SPI_Transfer_Status.Process.Begin_Counter++;
+
+	SPI_Transfer_Base_t *packet = (SPI_Transfer_Base_t *)RXBuf;
+
+	uint16_t Errors = 0;
+	int Length_Ok = 0;
+	int CRC_Ok = 0;
+
+	if (packet->payload.length > sizeof(SPI_Transfer_Base_t))
+		{
+			Errors = 0x0001;
+			SPI_Transfer_Status.Process.Length_Max_Error++;
+		}
+	else
+		{
+					Length_Ok = 1;
+		}
+
+	if (Length_Ok)
+		{
+			// ok packet length rx'f matches the DMA counter
+			uint16_t rx_crc = cal_crc((uint8_t *)&packet->payload, packet->payload.length);
+
+			if (packet->crc == rx_crc)
+				{
+					CRC_Ok = 1;
+					SPI_Transfer_Status.Process.CRC_OK_Counter++;
+				}
+			else
+				{
+					SPI_Transfer_Status.Process.CRC_Error_Counter++;
+				}
+		}
+
+	SPI_Transfer_Status.Process.End_Counter++;
+}
 
 int
 main(int argc, char *argv[])
@@ -224,14 +283,16 @@ main(int argc, char *argv[])
 
 			if (i > 0)
 				{
-					if ((i % 1000) > 0)
+					if ((i % 50) > 0)
 						{
 							SPI_Transfer_Base_t packet = {};
 							packet.payload.length = sizeof(packet) - 2;
 
 							sprintf((char *)packet.payload.buffer, "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****");
 
-							packet.crc = call_crc((const uint8_t *)&packet, packet.payload.length);
+							packet.crc = cal_crc((const uint8_t *)&packet, packet.payload.length);
+
+							memset(RXBuf, 0, sizeof(RXBuf));
 
 							spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
 						}
@@ -243,6 +304,8 @@ main(int argc, char *argv[])
 							usleep(10000);
 							usleep(1000);
 						}
+
+					Process_Buffer();
 				}
 
 			usleep(1000);
