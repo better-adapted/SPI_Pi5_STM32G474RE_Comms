@@ -186,5 +186,8 @@ void SPI1_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
+void EXTI4_IRQHandler(void)   // <----- The ISR Function We're Looking For!
+{
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+}
 /* USER CODE END 1 */

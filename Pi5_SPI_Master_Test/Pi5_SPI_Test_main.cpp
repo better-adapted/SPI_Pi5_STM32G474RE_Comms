@@ -28,7 +28,7 @@ gcc -o spi-driver-speed spi-driver-speed.c
 ./spi-driver-speed [bytes [bps [loops] ] ]
 */
 
-#define LOOPS 10000000
+#define LOOPS 1000000
 #define SPEED 1280000
 #define BYTES 128
 
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 
 			if (i > 0)
 				{
-					if ((i % 100) > 0)
+					if ((i % 5) > 0)
 						{
 							spiXfer(fd, speed, aTxBuffer, RXBuf, 113);
 						}

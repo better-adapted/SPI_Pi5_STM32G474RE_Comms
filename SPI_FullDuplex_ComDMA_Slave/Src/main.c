@@ -55,7 +55,23 @@ DMA_HandleTypeDef hdma_spi1_rx;
 
 /* USER CODE BEGIN PV */
 /* Buffer used for transmission */
-uint8_t aTxBuffer[128] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
+//uint8_t aTxBuffer[]   = "tmuwhgbwguygmliawromewzzjebiisyendbbfdluaxqzwmizmkumzoofoblglvnlwjrskthmsjhedgypxamwvgncowmwiurbvdeusykeevcrodvx";
+// =  0x613A as CRC-16/UMTS - buffer 61 then 3A as last byte.
+// RAW BYTES[112] = 74 6D 75 77 68 67 62 77 67 75 79 67 6D 6C 69 61 77 72 6F 6D 65 77 7A 7A 6A 65 62 69 69 73 79 65 6E 64 62 62 66 64 6C 75 61 78 71 7A 77 6D 69 7A 6D 6B 75 6D 7A 6F 6F 66 6F 62 6C 67 6C 76 6E 6C 77 6A 72 73 6B 74 68 6D 73 6A 68 65 64 67 79 70 78 61 6D 77 76 67 6E 63 6F 77 6D 77 69 75 72 62 76 64 65 75 73 79 6B 65 65 76 63 72 6F 64 76 78 61 3A
+// Result	Check	Poly	Init	RefIn	RefOut	XorOut
+// 0x613A	0xFEE8	0x8005	0x0000	false	false	0x0000
+
+
+uint8_t aTxBuffer[] = "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****";
+// seems to match  CRC-16/UMTS
+// https://crccalc.com/?crc=****SPI%20-%20Two%20Boards%20communication%20based%20on%20DMA%20****%20SPI%20Message%20********%20SPI%20Message%20********%20SPI%20Message%20****&method=CRC-16&datatype=ascii&outtype=hex
+// ioc settings CRC16 with X0+X2+X15
+// RAW BYTES[112] 2A 2A 2A 2A 53 50 49 20 2D 20 54 77 6F 20 42 6F 61 72 64 73 20 63 6F 6D 6D 75 6E 69 63 61 74 69 6F 6E 20 62 61 73 65 64 20 6F 6E 20 44 4D 41 20 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A 2A 2A 2A 2A 20 53 50 49 20 4D 65 73 73 61 67 65 20 2A 2A 2A 2A
+// = 73 C2 = 0x73C2
+// website says :
+// Result	Check	Poly	Init	RefIn	RefOut	XorOut
+// 0x73C2	0xFEE8	0x8005	0x0000	false	false	0x0000
+
 
 /* Buffer used for reception */
 uint8_t aRxBuffer[BUFFERSIZE];
@@ -78,15 +94,34 @@ static uint16_t Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferL
 /* USER CODE BEGIN 0 */
 int Transfer_Error_Counter=0;
 int Transfer_Process_Counter=0;
-int Transfer_Init=1;
+int Transfer_CS_Pin_High_Counter=0;
+int Transfer_Init=0;
+int Test_EXT4_Counter=1;
+
 
 HAL_StatusTypeDef SPI1_TEST_SEND()
 {
 	return HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, 111);
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	Transfer_CS_Pin_High_Counter++;
+}
 /* USER CODE END 0 */
 
+void SPI1_PA4_EN_Intterrupt()
+{
+	  GPIO_InitTypeDef GPIO_InitStruct = {0};
+	  GPIO_InitStruct.Pin = GPIO_PIN_4;
+	  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	  /* EXTI interrupt init*/
+	  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+	  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -126,16 +161,28 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_SPI1_Init();
+
+  if(Test_EXT4_Counter==0)
+  {
+	  MX_DMA_Init();
+	  MX_SPI1_Init();
+  }
+
   /* USER CODE BEGIN 2 */
   BSP_LED_Init(LED2);
+
+  SPI1_PA4_EN_Intterrupt();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if(Test_EXT4_Counter)
+	  {
+		  continue;
+	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -180,6 +227,7 @@ int main(void)
 			__HAL_RCC_SPI1_RELEASE_RESET();
 			HAL_SPI_DeInit(&hspi1);
 			MX_SPI1_Init();
+			//SPI1_PA4_EN_Intterrupt();
 
 			Transfer_Init=1;
 	      break;
@@ -308,6 +356,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
