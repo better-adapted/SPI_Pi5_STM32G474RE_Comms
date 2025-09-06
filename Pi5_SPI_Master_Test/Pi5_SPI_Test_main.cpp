@@ -28,8 +28,8 @@ gcc -o spi-driver-speed spi-driver-speed.c
 ./spi-driver-speed [bytes [bps [loops] ] ]
 */
 
-#define LOOPS 1000000
-#define SPEED 20000000
+#define LOOPS 100000
+#define SPEED 25000000
 #define BYTES 128
 
 double time_time(void)
@@ -255,6 +255,17 @@ uint64_t millis()
 	return (millis);
 }
 
+uint64_t micros()
+{
+	uint64_t nanos = 0;
+	uint64_t micros = 0;
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	nanos = (uint64_t)now.tv_sec * 1000000000U + (uint64_t)now.tv_nsec;
+	micros = nanos / 1000;
+	return (micros);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -296,55 +307,49 @@ main(int argc, char *argv[])
 
 			while (1)
 				{
-					uint64_t diff = (millis() - tx_last);
-					if (diff < 4)
+					uint64_t diff = (micros() - tx_last);
+					if (diff < 3000)
 						{
-							usleep(diff/4);
+							usleep(diff/4000);
 						}
 					else
 						{
 							break;
 						}
 				}
+
+			  tx_last = micros();
 			
-			if (i > 0)
-				{
-					if ((i % 50000000) > 0)
+				if ((i % 50000000) > 0)
+					{
+						SPI_Transfer_Base_t packet = {};
+						packet.payload.length = sizeof(packet) - 2;
+
+						//sprintf((char *)packet.payload.buffer, "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****");
+
 						{
-							SPI_Transfer_Base_t packet = {};
-							packet.payload.length = sizeof(packet) - 2;
+							static uint32_t tx_counter;
+							packet.payload.buffer[4] = tx_counter >> 0;
+							packet.payload.buffer[5] = tx_counter >> 8;
+							packet.payload.buffer[6] = tx_counter >> 16;
+							packet.payload.buffer[7] = tx_counter >> 24;
 
-							//sprintf((char *)packet.payload.buffer, "****SPI - Two Boards communication based on DMA **** SPI Message ******** SPI Message ******** SPI Message ****");
-
-							{
-								static uint32_t tx_counter;
-								packet.payload.buffer[4] = tx_counter >> 0;
-								packet.payload.buffer[5] = tx_counter >> 8;
-								packet.payload.buffer[6] = tx_counter >> 16;
-								packet.payload.buffer[7] = tx_counter >> 24;
-
-								for (int x = 8; x < sizeof(packet.payload.buffer); x++)
-									{
-										packet.payload.buffer[x] = rand();
-									}								
-							}
-
-							packet.crc = cal_crc((const uint8_t *)&packet, packet.payload.length);
-							memset(RXBuf, 0, sizeof(RXBuf));
-							int res = spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
-
-						}
-					else
-						{
-							char aTxBuffer[128] = "well this is just to see what crc does with a shorter packet?";
-							spiXfer(fd, speed, aTxBuffer, RXBuf, sizeof(aTxBuffer));
+							for (int x = 8; x < sizeof(packet.payload.buffer); x++)
+								{
+									packet.payload.buffer[x] = rand();
+								}								
 						}
 
-					Process_Buffer();
+						packet.crc = cal_crc((const uint8_t *)&packet, packet.payload.length);
+						memset(RXBuf, 0, sizeof(RXBuf));
 
-					tx_last = millis();
-				}
-		}
+						
+						int res = spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
+
+					}
+
+				Process_Buffer();				
+			}
 
 	diff = time_time() - start;
 
