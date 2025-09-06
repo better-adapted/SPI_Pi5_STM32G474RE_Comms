@@ -297,7 +297,7 @@ main(int argc, char *argv[])
 			while (1)
 				{
 					uint64_t diff = (millis() - tx_last);
-					if (diff < 10)
+					if (diff < 4)
 						{
 							usleep(diff/4);
 						}
@@ -306,8 +306,6 @@ main(int argc, char *argv[])
 							break;
 						}
 				}
-
-			tx_last = millis();
 			
 			if (i > 0)
 				{
@@ -343,6 +341,8 @@ main(int argc, char *argv[])
 						}
 
 					Process_Buffer();
+
+					tx_last = millis();
 				}
 		}
 
