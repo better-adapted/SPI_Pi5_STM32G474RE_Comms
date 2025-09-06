@@ -181,7 +181,7 @@ typedef struct
 	{
 		uint16_t length;
 		uint8_t command;
-		uint8_t buffer[1024];
+		uint8_t buffer[3584];
 	} payload;
 	uint16_t crc;
 }SPI_Transfer_Base_t;
@@ -244,6 +244,17 @@ void Process_Buffer()
 	SPI_Transfer_Status.Process.End_Counter++;
 }
 
+uint64_t millis()
+{
+	uint64_t nanos = 0;
+	uint64_t millis = 0;
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+	nanos =  (uint64_t)now.tv_sec * 1000000000U + (uint64_t)now.tv_nsec;
+	millis = nanos / 1000000;
+	return (millis);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -281,6 +292,23 @@ main(int argc, char *argv[])
 	for (i = 0; i < loops; i++)
 		{
 
+			static uint64_t tx_last;
+
+			while (1)
+				{
+					uint64_t diff = (millis() - tx_last);
+					if (diff < 10)
+						{
+							usleep(diff/4);
+						}
+					else
+						{
+							break;
+						}
+				}
+
+			tx_last = millis();
+			
 			if (i > 0)
 				{
 					if ((i % 50000000) > 0)
@@ -304,20 +332,14 @@ main(int argc, char *argv[])
 							}
 
 							packet.crc = cal_crc((const uint8_t *)&packet, packet.payload.length);
-
 							memset(RXBuf, 0, sizeof(RXBuf));
-
 							int res = spiXfer(fd, speed,(char *)&packet, RXBuf, sizeof(packet));
 
-							usleep(1000);
 						}
 					else
 						{
 							char aTxBuffer[128] = "well this is just to see what crc does with a shorter packet?";
-
 							spiXfer(fd, speed, aTxBuffer, RXBuf, sizeof(aTxBuffer));
-							usleep(10000);
-							usleep(1000);
 						}
 
 					Process_Buffer();

@@ -149,7 +149,7 @@ typedef struct
 	{
 		uint16_t length;
 		uint8_t command;
-		uint8_t buffer[1024];
+		uint8_t buffer[3584];
 	} payload;
 	uint16_t crc;
 }SPI_Transfer_Base_t;
