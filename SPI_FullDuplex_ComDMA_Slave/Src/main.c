@@ -127,11 +127,13 @@ int Transfer_Init=1;
 #define SPI1_CS_PORT							GPIOA
 #define SPI1_CS_EXTI_IRQn						EXTI4_IRQn
 
-#define SPI1_Process_DBG_D0_PIN					GPIO_PIN_11
-#define SPI1_Process_DBG_D1_PIN					GPIO_PIN_12
-#define SPI1_Process_DBG_D2_PIN					GPIO_PIN_13
-#define SPI1_Process_DBG_D3_PIN					GPIO_PIN_14
-#define SPI1_Process_DBG_D4_PIN					GPIO_PIN_15
+#define SPI1_Process_DBG_D0_PIN					GPIO_PIN_13
+#define SPI1_Process_DBG_D1_PIN					GPIO_PIN_14
+#define SPI1_Process_DBG_D2_PIN					GPIO_PIN_15
+#define SPI1_Process_DBG_D3_PIN					GPIO_PIN_1
+#define SPI1_Process_DBG_D4_PIN					GPIO_PIN_2
+#define SPI1_Process_DBG_D5_PIN					GPIO_PIN_11
+#define SPI1_Process_DBG_D6_PIN					GPIO_PIN_12
 
 #define SPI1_Process_DBG_PORT					GPIOB
 
@@ -224,6 +226,8 @@ HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 
 	SPI_Transfer_Base_t packet = {};
 
+	pRandom=0;
+
 	if(pRandom)
 	{
 		// random payload
@@ -242,21 +246,24 @@ HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 		sprintf((char *)packet.payload.buffer, "Reply Message Blah Blah,%09ld,%09ld",tx_counter,HAL_GetTick());
 	}
 
+	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D5_PIN, GPIO_PIN_SET); // crc call check
 	packet.payload.length = sizeof(packet)-2;
 	packet.crc = cal_crc((const uint8_t *)&packet.payload, packet.payload.length);
+	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D5_PIN, GPIO_PIN_RESET); // crc call check
 
 	tx_counter++;
 
-	uint8_t* byte_ptr=(uint8_t*)&packet;
+	memcpy(aTxBuffer,&packet,sizeof(packet));
 
-	for(int x=0;x<sizeof(packet);x++)
-	{
-		aTxBuffer[x]=byte_ptr[x];
-	}
-
-	HAL_StatusTypeDef res =  HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
+//	uint8_t* byte_ptr=(uint8_t*)&packet;
+//	for(int x=0;x<sizeof(packet);x++)
+//	{
+//		aTxBuffer[x]=byte_ptr[x];
+//	}
 
 	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D1_PIN, GPIO_PIN_RESET); // SPI1_TEST_SEND done
+
+	HAL_StatusTypeDef res =  HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
 
 	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D2_PIN, GPIO_PIN_SET); // ready to RX!
 
@@ -542,13 +549,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_SPI_DBG_D0_Pin|GPIO_SPI_DBG_D1_Pin|GPIO_SPI_DBG_D2_Pin|GPIO_SPI_DBG_D3_Pin
-                          |GPIO_SPI_DBG_D4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11|GPIO_PIN_12
+                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : GPIO_SPI_DBG_D0_Pin GPIO_SPI_DBG_D1_Pin GPIO_SPI_DBG_D2_Pin GPIO_SPI_DBG_D3_Pin
-                           GPIO_SPI_DBG_D4_Pin */
-  GPIO_InitStruct.Pin = GPIO_SPI_DBG_D0_Pin|GPIO_SPI_DBG_D1_Pin|GPIO_SPI_DBG_D2_Pin|GPIO_SPI_DBG_D3_Pin
-                          |GPIO_SPI_DBG_D4_Pin;
+  /*Configure GPIO pins : PB1 PB2 PB11 PB12
+                           PB13 PB14 PB15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11|GPIO_PIN_12
+                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

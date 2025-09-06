@@ -57,16 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define GPIO_SPI_DBG_D0_Pin GPIO_PIN_11
-#define GPIO_SPI_DBG_D0_GPIO_Port GPIOB
-#define GPIO_SPI_DBG_D1_Pin GPIO_PIN_12
-#define GPIO_SPI_DBG_D1_GPIO_Port GPIOB
-#define GPIO_SPI_DBG_D2_Pin GPIO_PIN_13
-#define GPIO_SPI_DBG_D2_GPIO_Port GPIOB
-#define GPIO_SPI_DBG_D3_Pin GPIO_PIN_14
-#define GPIO_SPI_DBG_D3_GPIO_Port GPIOB
-#define GPIO_SPI_DBG_D4_Pin GPIO_PIN_15
-#define GPIO_SPI_DBG_D4_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 /* Size of buffer */
