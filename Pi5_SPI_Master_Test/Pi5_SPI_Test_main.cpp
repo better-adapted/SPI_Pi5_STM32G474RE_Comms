@@ -308,7 +308,7 @@ main(int argc, char *argv[])
 			while (1)
 				{
 					uint64_t diff = (micros() - tx_last);
-					if (diff < 3000)
+					if (diff < 5000)
 						{
 							usleep(diff/4000);
 						}

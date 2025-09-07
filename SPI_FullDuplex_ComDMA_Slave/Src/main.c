@@ -138,14 +138,15 @@ int Transfer_Init=1;
 #define SPI1_Process_DBG_PORT					GPIOB
 
 
+inline uint16_t cal_crc(const uint8_t *pBuffer,int pSize);
+
 uint16_t cal_crc(const uint8_t *pBuffer,int pSize)
 {
 	uint16_t crc = 0xFFFF;
-	uint8_t temp;
 	for(int x=0;x<pSize;x++)
 	{
-			temp = pBuffer[x];
-			crc -= temp;
+		crc -= (uint8_t)*pBuffer;
+		pBuffer++;
 	}
 
 	return crc;
