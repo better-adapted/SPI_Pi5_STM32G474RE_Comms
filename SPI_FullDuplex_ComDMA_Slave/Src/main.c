@@ -32,7 +32,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-int SPI1_Get_CS();
+int SPI3_Get_CS();
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -52,9 +52,9 @@ enum
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SPI_HandleTypeDef hspi1;
-DMA_HandleTypeDef hdma_spi1_tx;
-DMA_HandleTypeDef hdma_spi1_rx;
+SPI_HandleTypeDef hspi3;
+DMA_HandleTypeDef hdma_spi3_rx;
+DMA_HandleTypeDef hdma_spi3_tx;
 
 /* USER CODE BEGIN PV */
 /* Buffer used for transmission */
@@ -89,7 +89,7 @@ __IO uint32_t wTransferState = TRANSFER_WAIT;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-static void MX_SPI1_Init(void);
+static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -123,19 +123,24 @@ SPI_Transfer_Status_t SPI_Transfer_Status={};
 
 int Transfer_Init=1;
 
-#define SPI1_CS_PIN								GPIO_PIN_4
-#define SPI1_CS_PORT							GPIOA
-#define SPI1_CS_EXTI_IRQn						EXTI4_IRQn
+#define SPI3_CS_PIN								GPIO_PIN_4
+#define SPI3_CS_PORT							GPIOA
+#define SPI3_CS_EXTI_IRQn						EXTI4_IRQn
 
-#define SPI1_Process_DBG_D0_PIN					GPIO_PIN_13
-#define SPI1_Process_DBG_D1_PIN					GPIO_PIN_14
-#define SPI1_Process_DBG_D2_PIN					GPIO_PIN_15
-#define SPI1_Process_DBG_D3_PIN					GPIO_PIN_1
-#define SPI1_Process_DBG_D4_PIN					GPIO_PIN_2
-#define SPI1_Process_DBG_D5_PIN					GPIO_PIN_11
-#define SPI1_Process_DBG_D6_PIN					GPIO_PIN_12
-
-#define SPI1_Process_DBG_PORT					GPIOB
+#define SPI3_Process_DBG_D0_PIN					GPIO_PIN_13
+#define SPI3_Process_DBG_D0_PORT				GPIOB
+#define SPI3_Process_DBG_D1_PIN					GPIO_PIN_14
+#define SPI3_Process_DBG_D1_PORT				GPIOB
+#define SPI3_Process_DBG_D2_PIN					GPIO_PIN_15
+#define SPI3_Process_DBG_D2_PORT				GPIOB
+#define SPI3_Process_DBG_D3_PIN					GPIO_PIN_1
+#define SPI3_Process_DBG_D3_PORT				GPIOB
+#define SPI3_Process_DBG_D4_PIN					GPIO_PIN_2
+#define SPI3_Process_DBG_D4_PORT				GPIOB
+#define SPI3_Process_DBG_D5_PIN					GPIO_PIN_11
+#define SPI3_Process_DBG_D5_PORT				GPIOB
+#define SPI3_Process_DBG_D6_PIN					GPIO_PIN_12
+#define SPI3_Process_DBG_D6_PORT				GPIOB
 
 
 inline uint16_t cal_crc(const uint8_t *pBuffer,int pSize);
@@ -183,7 +188,7 @@ uint16_t Process_Buffer()
 	}
 	else
 	{
-		int bytes_rx_in_DMA = SPI_TX_RX_BUFFERSIZE - hspi1.hdmarx->Instance->CNDTR;
+		int bytes_rx_in_DMA = SPI_TX_RX_BUFFERSIZE - hspi3.hdmarx->Instance->CNDTR;
 		if(packet->payload.length == (bytes_rx_in_DMA)-2)
 		{
 			Length_Ok=1;
@@ -217,10 +222,10 @@ uint16_t Process_Buffer()
 	return Errors;
 }
 
-HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
+HAL_StatusTypeDef SPI3_TEST_SEND(int pRandom)
 {
 
-	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D1_PIN, GPIO_PIN_SET); // SPI1_TEST_SEND started
+	HAL_GPIO_WritePin(SPI3_Process_DBG_D1_PORT, SPI3_Process_DBG_D1_PIN, GPIO_PIN_SET); // SPI3_TEST_SEND started
 	static uint32_t tx_counter;
 	//memset(aRxBuffer,0xFF,sizeof(aRxBuffer));
 	//memset(aTxBuffer,0,sizeof(aTxBuffer));
@@ -247,10 +252,10 @@ HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 		sprintf((char *)packet.payload.buffer, "Reply Message Blah Blah,%09ld,%09ld",tx_counter,HAL_GetTick());
 	}
 
-	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D5_PIN, GPIO_PIN_SET); // crc call check
+	HAL_GPIO_WritePin(SPI3_Process_DBG_D5_PORT, SPI3_Process_DBG_D5_PIN, GPIO_PIN_SET); // crc call check
 	packet.payload.length = sizeof(packet)-2;
 	packet.crc = cal_crc((const uint8_t *)&packet.payload, packet.payload.length);
-	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D5_PIN, GPIO_PIN_RESET); // crc call check
+	HAL_GPIO_WritePin(SPI3_Process_DBG_D5_PORT, SPI3_Process_DBG_D5_PIN, GPIO_PIN_RESET); // crc call check
 
 	tx_counter++;
 
@@ -262,11 +267,11 @@ HAL_StatusTypeDef SPI1_TEST_SEND(int pRandom)
 //		aTxBuffer[x]=byte_ptr[x];
 //	}
 
-	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D1_PIN, GPIO_PIN_RESET); // SPI1_TEST_SEND done
+	HAL_GPIO_WritePin(SPI3_Process_DBG_D1_PORT, SPI3_Process_DBG_D1_PIN, GPIO_PIN_RESET); // SPI3_TEST_SEND done
 
-	HAL_StatusTypeDef res =  HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
+	HAL_StatusTypeDef res =  HAL_SPI_TransmitReceive_DMA(&hspi3, (uint8_t *)aTxBuffer, (uint8_t *)aRxBuffer, SPI_TX_RX_BUFFERSIZE);
 
-	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D2_PIN, GPIO_PIN_SET); // ready to RX!
+	HAL_GPIO_WritePin(SPI3_Process_DBG_D2_PORT, SPI3_Process_DBG_D2_PIN, GPIO_PIN_SET); // ready to RX!
 
 	return res;
 }
@@ -275,11 +280,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin==GPIO_PIN_4)
 	{
-		if(SPI1_Get_CS())
+		if(SPI3_Get_CS())
 		{
 			SPI_Transfer_Status.CS_End.Interrupt_Counter++;
 
-			HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
+			HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi3);
 			if(state_res<=(HAL_StatusTypeDef)HAL_SPI_STATE_ABORT)
 			{
 				SPI_Transfer_Status.CS_End.States[state_res]++;
@@ -288,31 +293,31 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			// just make this state - even if no bytes!
 			wTransferState = TRANSFER_COMPLETE;
 
-			HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D0_PIN, GPIO_PIN_SET); // Signal Main loop sees transfer complete
+			HAL_GPIO_WritePin(SPI3_Process_DBG_D0_PORT, SPI3_Process_DBG_D0_PIN, GPIO_PIN_SET); // Signal Main loop sees transfer complete
 		}
 		else
 		{
-			HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D2_PIN, GPIO_PIN_RESET); // RX started with CS low
+			HAL_GPIO_WritePin(SPI3_Process_DBG_D2_PORT, SPI3_Process_DBG_D2_PIN, GPIO_PIN_RESET); // RX started with CS low
 		}
 	}
 }
 
-int SPI1_Get_CS()
+int SPI3_Get_CS()
 {
-	return HAL_GPIO_ReadPin(SPI1_CS_PORT, SPI1_CS_PIN);
+	return HAL_GPIO_ReadPin(SPI3_CS_PORT, SPI3_CS_PIN);
 }
 
-void SPI1_PA4_EN_Intterrupt()
+void SPI3_PA4_EN_Intterrupt()
 {
 	  GPIO_InitTypeDef GPIO_InitStruct = {0};
-	  GPIO_InitStruct.Pin = SPI1_CS_PIN;
+	  GPIO_InitStruct.Pin = SPI3_CS_PIN;
 	  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
 	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(SPI1_CS_PORT, &GPIO_InitStruct);
+	  HAL_GPIO_Init(SPI3_CS_PORT, &GPIO_InitStruct);
 
 	  /* EXTI interrupt init*/
-	  HAL_NVIC_SetPriority(SPI1_CS_EXTI_IRQn, 0, 0);
-	  HAL_NVIC_EnableIRQ(SPI1_CS_EXTI_IRQn);
+	  HAL_NVIC_SetPriority(SPI3_CS_EXTI_IRQn, 0, 0);
+	  HAL_NVIC_EnableIRQ(SPI3_CS_EXTI_IRQn);
 }
 
 /* USER CODE END 0 */
@@ -357,11 +362,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_SPI1_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
 
   BSP_LED_Init(LED2);
-  SPI1_PA4_EN_Intterrupt();
+  SPI3_PA4_EN_Intterrupt();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -372,11 +377,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi1);
+	  HAL_StatusTypeDef state_res = HAL_SPI_GetState(&hspi3);
 
 	  if(Transfer_Init)
 	  {
-		  HAL_StatusTypeDef res = SPI1_TEST_SEND(1);
+		  HAL_StatusTypeDef res = SPI3_TEST_SEND(1);
 		  if ( res != HAL_OK)
 		  {
 		    /* Transfer error in transmission process */
@@ -392,20 +397,20 @@ int main(void)
 	  switch (wTransferState)
 	  {
 	    case TRANSFER_COMPLETE :
-			HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D0_PIN, GPIO_PIN_RESET); // Main loop sees transfer complete
+			HAL_GPIO_WritePin(SPI3_Process_DBG_D0_PORT, SPI3_Process_DBG_D0_PIN, GPIO_PIN_RESET); // Main loop sees transfer complete
 
-			HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D3_PIN, GPIO_PIN_SET); // Process Buffer Start
+			HAL_GPIO_WritePin(SPI3_Process_DBG_D3_PORT, SPI3_Process_DBG_D3_PIN, GPIO_PIN_SET); // Process Buffer Start
 	    	Process_Buffer();
-	    	HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D3_PIN, GPIO_PIN_RESET); // Process Buffer Done
+	    	HAL_GPIO_WritePin(SPI3_Process_DBG_D3_PORT, SPI3_Process_DBG_D3_PIN, GPIO_PIN_RESET); // Process Buffer Done
 
-			HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D4_PIN, GPIO_PIN_SET); // SPI config for next packet start
-	    	HAL_SPI_DMAStop(&hspi1);
-			HAL_SPI_Abort(&hspi1);
-			__HAL_RCC_SPI1_FORCE_RESET();
-			__HAL_RCC_SPI1_RELEASE_RESET();
-			HAL_GPIO_WritePin(SPI1_Process_DBG_PORT, SPI1_Process_DBG_D4_PIN, GPIO_PIN_RESET); // SPI config for next packet start
+			HAL_GPIO_WritePin(SPI3_Process_DBG_D4_PORT, SPI3_Process_DBG_D4_PIN, GPIO_PIN_SET); // SPI config for next packet start
+	    	HAL_SPI_DMAStop(&hspi3);
+			HAL_SPI_Abort(&hspi3);
+			__HAL_RCC_SPI3_FORCE_RESET();
+			__HAL_RCC_SPI3_RELEASE_RESET();
+			HAL_GPIO_WritePin(SPI3_Process_DBG_D4_PORT, SPI3_Process_DBG_D4_PIN, GPIO_PIN_RESET); // SPI config for next packet start
 
-			HAL_StatusTypeDef res = SPI1_TEST_SEND(1);
+			HAL_StatusTypeDef res = SPI3_TEST_SEND(1);
 
 			wTransferState = TRANSFER_PROCESSED;
 	      break;
@@ -415,12 +420,12 @@ int main(void)
 			wTransferState = TRANSFER_PROCESSED;
 
 			// https://community.st.com/t5/stm32-mcus-products/restart-spi-dma-transmission/td-p/637909
-			HAL_SPI_DMAStop(&hspi1);
-			__HAL_RCC_SPI1_FORCE_RESET();
-			__HAL_RCC_SPI1_RELEASE_RESET();
-			HAL_SPI_DeInit(&hspi1);
-			MX_SPI1_Init();
-			SPI1_PA4_EN_Intterrupt();
+			HAL_SPI_DMAStop(&hspi3);
+			__HAL_RCC_SPI3_FORCE_RESET();
+			__HAL_RCC_SPI3_RELEASE_RESET();
+			HAL_SPI_DeInit(&hspi3);
+			MX_SPI3_Init();
+			SPI3_PA4_EN_Intterrupt();
 
 			Transfer_Init=1;
 	      break;
@@ -476,41 +481,41 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief SPI1 Initialization Function
+  * @brief SPI3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_SPI1_Init(void)
+static void MX_SPI3_Init(void)
 {
 
-  /* USER CODE BEGIN SPI1_Init 0 */
+  /* USER CODE BEGIN SPI3_Init 0 */
 
-  /* USER CODE END SPI1_Init 0 */
+  /* USER CODE END SPI3_Init 0 */
 
-  /* USER CODE BEGIN SPI1_Init 1 */
+  /* USER CODE BEGIN SPI3_Init 1 */
 
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_SLAVE;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 7;
-  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  /* USER CODE END SPI3_Init 1 */
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_SLAVE;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi3.Init.NSS = SPI_NSS_HARD_INPUT;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 7;
+  hspi3.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi3.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI1_Init 2 */
+  /* USER CODE BEGIN SPI3_Init 2 */
 
-  /* USER CODE END SPI1_Init 2 */
+  /* USER CODE END SPI3_Init 2 */
 
 }
 
@@ -525,12 +530,12 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
-  /* DMA1_Channel3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 
 }
 
@@ -548,6 +553,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_11|GPIO_PIN_12
